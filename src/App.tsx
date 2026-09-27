@@ -70,10 +70,19 @@ export default function App() {
   };
 
   // Create new campaign
-  const handleCreateCampaign = (newCamp: CampaignConfig) => {
+  const handleCreateCampaign = async (newCamp: CampaignConfig) => {
     setCampaign(newCamp);
     showToast(`New campaign "${newCamp.name}" launched!`);
     setActiveTab('organizer');
+    try {
+      await fetch('/api/campaign', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newCamp),
+      });
+    } catch (err) {
+      console.warn('Backend sync for new campaign failed', err);
+    }
   };
 
   // Export CSV

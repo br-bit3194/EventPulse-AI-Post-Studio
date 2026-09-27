@@ -7,7 +7,12 @@ export interface CampaignConfig {
   name: string;
   format: 'hybrid' | 'in-person' | 'virtual';
   dates: string;
+  startDate?: string;
+  endDate?: string;
   location: string;
+  venue?: string;
+  city?: string;
+  state?: string;
   organizerName: string;
   isOrganizerVerified: boolean;
   hashtags: string[];

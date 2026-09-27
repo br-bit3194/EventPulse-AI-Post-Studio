@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CampaignConfig, SharedPost } from '../types';
 
 interface OrganizerViewProps {
@@ -22,11 +22,29 @@ export const OrganizerView: React.FC<OrganizerViewProps> = ({
   const [eventName, setEventName] = useState(campaign.name);
   const [format, setFormat] = useState<'hybrid' | 'in-person' | 'virtual'>(campaign.format);
   const [organizerName, setOrganizerName] = useState(campaign.organizerName);
+  const [dates, setDates] = useState(campaign.dates);
+  const [venue, setVenue] = useState(campaign.venue || '');
+  const [location, setLocation] = useState(campaign.location);
   const [hashtags, setHashtags] = useState<string[]>(campaign.hashtags);
   const [linkedinUrl, setLinkedinUrl] = useState(campaign.socialLinks.linkedin);
   const [twitterHandle, setTwitterHandle] = useState(campaign.socialLinks.twitter);
   const [websiteUrl, setWebsiteUrl] = useState(campaign.socialLinks.website);
   const [isPublicAccess, setIsPublicAccess] = useState(campaign.isPublicAccess);
+
+  // Sync state when campaign changes
+  useEffect(() => {
+    setEventName(campaign.name);
+    setFormat(campaign.format);
+    setOrganizerName(campaign.organizerName);
+    setDates(campaign.dates);
+    setVenue(campaign.venue || '');
+    setLocation(campaign.location);
+    setHashtags(campaign.hashtags);
+    setLinkedinUrl(campaign.socialLinks.linkedin);
+    setTwitterHandle(campaign.socialLinks.twitter);
+    setWebsiteUrl(campaign.socialLinks.website);
+    setIsPublicAccess(campaign.isPublicAccess);
+  }, [campaign]);
 
   // UI state
   const [isSaving, setIsSaving] = useState(false);
@@ -69,6 +87,9 @@ export const OrganizerView: React.FC<OrganizerViewProps> = ({
         name: eventName,
         format,
         organizerName,
+        dates,
+        venue,
+        location,
         hashtags,
         isPublicAccess,
         socialLinks: {
@@ -88,6 +109,9 @@ export const OrganizerView: React.FC<OrganizerViewProps> = ({
     setEventName(campaign.name);
     setFormat(campaign.format);
     setOrganizerName(campaign.organizerName);
+    setDates(campaign.dates);
+    setVenue(campaign.venue || '');
+    setLocation(campaign.location);
     setHashtags(campaign.hashtags);
     setLinkedinUrl(campaign.socialLinks.linkedin);
     setTwitterHandle(campaign.socialLinks.twitter);
@@ -267,6 +291,51 @@ export const OrganizerView: React.FC<OrganizerViewProps> = ({
                       verified
                     </span>
                   </div>
+                </div>
+
+                {/* Dates & Venue Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-[#1c1b1b] uppercase tracking-wider" htmlFor="event-dates">
+                      Event Dates
+                    </label>
+                    <input
+                      className="w-full bg-[#f6f3f2] focus:bg-white text-[#1c1b1b] text-sm rounded-lg px-4 py-2.5 outline-none transition-all border border-transparent focus:border-[#0466c2] focus:ring-2 focus:ring-[#0466c2]/20 font-medium"
+                      id="event-dates"
+                      type="text"
+                      value={dates}
+                      onChange={(e) => setDates(e.target.value)}
+                      placeholder="e.g. Oct 14-16, 2026"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-[#1c1b1b] uppercase tracking-wider" htmlFor="event-venue">
+                      Venue Details
+                    </label>
+                    <input
+                      className="w-full bg-[#f6f3f2] focus:bg-white text-[#1c1b1b] text-sm rounded-lg px-4 py-2.5 outline-none transition-all border border-transparent focus:border-[#0466c2] focus:ring-2 focus:ring-[#0466c2]/20 font-medium"
+                      id="event-venue"
+                      type="text"
+                      value={venue}
+                      onChange={(e) => setVenue(e.target.value)}
+                      placeholder="e.g. Moscone Center (San Francisco, CA)"
+                    />
+                  </div>
+                </div>
+
+                {/* Location / City / State */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#1c1b1b] uppercase tracking-wider" htmlFor="event-location">
+                    City, State & Region
+                  </label>
+                  <input
+                    className="w-full bg-[#f6f3f2] focus:bg-white text-[#1c1b1b] text-sm rounded-lg px-4 py-2.5 outline-none transition-all border border-transparent focus:border-[#0466c2] focus:ring-2 focus:ring-[#0466c2]/20 font-medium"
+                    id="event-location"
+                    type="text"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="e.g. San Francisco, CA, USA"
+                  />
                 </div>
 
                 {/* Event Hashtags Section */}
@@ -467,7 +536,7 @@ export const OrganizerView: React.FC<OrganizerViewProps> = ({
                   </h3>
                   <p className="text-xs text-white/90 flex items-center gap-1 mt-0.5">
                     <span className="material-symbols-outlined text-[14px]">pin_drop</span>
-                    <span>{campaign.location} • {campaign.organizerName.split(' ')[0]}</span>
+                    <span>{campaign.venue ? `${campaign.venue} • ` : ''}{campaign.location} • {campaign.organizerName.split(' ')[0]}</span>
                   </p>
                 </div>
               </div>

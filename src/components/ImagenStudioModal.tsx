@@ -232,6 +232,7 @@ export const ImagenStudioModal: React.FC<ImagenStudioModalProps> = ({
                 src={generatedVisual.url}
                 alt="Generated visual"
                 className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
               />
               <div className="absolute bottom-2 left-2 px-2 py-1 rounded bg-black/80 text-white text-[11px] backdrop-blur-xs flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[13px] text-[#6cf8bb]">auto_awesome</span>

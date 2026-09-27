@@ -380,7 +380,7 @@ Special shoutout to @DavidChen for the thought-provoking keynote. Looking forwar
                 </h1>
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#d5e3ff] text-[#001b3c] text-xs font-semibold">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#004e98]"></span>
-                  Live in SF
+                  {campaign.dates} • {campaign.city || campaign.location.split(',')[0]}
                 </span>
               </div>
               <p className="text-xs text-[#414752] flex flex-wrap items-center gap-1 mt-1">
@@ -388,7 +388,7 @@ Special shoutout to @DavidChen for the thought-provoking keynote. Looking forwar
                 <span>Hosted by {campaign.organizerName}</span>
                 <span className="mx-1">•</span>
                 <span className="material-symbols-outlined text-[15px] text-[#ba1a1a]">location_on</span>
-                <span>{campaign.location}</span>
+                <span>{campaign.venue ? `${campaign.venue}, ` : ''}{campaign.location}</span>
               </p>
             </div>
           </div>
