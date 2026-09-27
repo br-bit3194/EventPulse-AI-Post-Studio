@@ -21,12 +21,17 @@ app.use((_req, res, next) => {
 });
 
 // In-memory campaign state
-export let currentCampaign = {
+export let currentCampaign: any = {
   id: 'TN-2025-V2',
   name: 'TechNova Global Summit 2025',
   format: 'hybrid',
   dates: 'Oct 14-16, 2025',
-  location: 'San Francisco, CA & Virtual',
+  startDate: '2025-10-14',
+  endDate: '2025-10-16',
+  venue: 'Moscone Center (San Francisco, CA)',
+  location: 'San Francisco, CA, USA',
+  city: 'San Francisco',
+  state: 'CA',
   organizerName: 'TechNova Media & Ventures Group',
   isOrganizerVerified: true,
   hashtags: ['#TechNova2025', '#AIFuture', '#TechSummit'],
@@ -46,6 +51,100 @@ export let currentCampaign = {
     viralRate: '6.8%',
   },
 };
+
+export let allCampaigns: any[] = [
+  currentCampaign,
+  {
+    id: 'CS-2026-A1',
+    name: 'CloudScale DevCon 2026',
+    format: 'in-person',
+    dates: 'Nov 12-14, 2026',
+    startDate: '2026-11-12',
+    endDate: '2026-11-14',
+    venue: 'Austin Convention Center',
+    location: 'Austin, TX, USA',
+    city: 'Austin',
+    state: 'TX',
+    organizerName: 'CloudScale Media & Systems',
+    isOrganizerVerified: true,
+    hashtags: ['#CloudScale2026', '#DevOps', '#Kubernetes', '#TechScale'],
+    socialLinks: {
+      linkedin: 'linkedin.com/company/cloudscale-devcon',
+      twitter: '@CloudScaleConf',
+      website: 'https://cloudscale.dev',
+    },
+    generatorSlug: 'https://eventpulse.ai/p/cloudscale-devcon',
+    isPublicAccess: true,
+    stats: {
+      postsCreated: 540,
+      postsGrowth: '+18%',
+      reachCount: '210.4K',
+      reachNumeric: 210400,
+      vipCount: '28 / 35',
+      viralRate: '5.2%',
+    },
+  },
+  {
+    id: 'AI-2026-W3',
+    name: 'NextGen AI World Congress 2026',
+    format: 'virtual',
+    dates: 'Dec 02-04, 2026',
+    startDate: '2026-12-02',
+    endDate: '2026-12-04',
+    venue: 'Virtual Broadcast Studio / Spatial Stage',
+    location: 'Virtual / Worldwide',
+    city: 'Virtual',
+    state: 'Worldwide',
+    organizerName: 'NextGen AI Global Consortium',
+    isOrganizerVerified: true,
+    hashtags: ['#NextGenAI2026', '#GenerativeAI', '#AgenticAI', '#FutureOfTech'],
+    socialLinks: {
+      linkedin: 'linkedin.com/company/nextgen-ai-world',
+      twitter: '@NextGenAIWorld',
+      website: 'https://nextgenai.global',
+    },
+    generatorSlug: 'https://eventpulse.ai/p/nextgen-ai-world',
+    isPublicAccess: true,
+    stats: {
+      postsCreated: 890,
+      postsGrowth: '+32%',
+      reachCount: '345.8K',
+      reachNumeric: 345800,
+      vipCount: '62 / 70',
+      viralRate: '7.4%',
+    },
+  },
+  {
+    id: 'GTL-2025-E9',
+    name: 'Global Tech Leaders Forum 2025',
+    format: 'in-person',
+    dates: 'Sep 18-20, 2025',
+    startDate: '2025-09-18',
+    endDate: '2025-09-20',
+    venue: 'Jacob K. Javits Convention Center',
+    location: 'New York, NY, USA',
+    city: 'New York',
+    state: 'NY',
+    organizerName: 'Executive Tech Council',
+    isOrganizerVerified: true,
+    hashtags: ['#TechLeadersNY', '#ExecutiveLeadership', '#EnterpriseAI'],
+    socialLinks: {
+      linkedin: 'linkedin.com/company/tech-leaders-forum',
+      twitter: '@TechLeadersNY',
+      website: 'https://techleadersforum.org',
+    },
+    generatorSlug: 'https://eventpulse.ai/p/tech-leaders-ny',
+    isPublicAccess: true,
+    stats: {
+      postsCreated: 1420,
+      postsGrowth: '+12%',
+      reachCount: '620.1K',
+      reachNumeric: 620100,
+      vipCount: '85 / 85',
+      viralRate: '8.1%',
+    },
+  },
+];
 
 export let livePosts = [
   {
@@ -119,7 +218,7 @@ apiRouter.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', time: new Date().toISOString(), platform: process.env.VERCEL ? 'vercel-serverless' : 'node' });
 });
 
-// Campaign config
+// Campaign config (Active campaign)
 apiRouter.get('/campaign', (_req: Request, res: Response) => {
   res.json({ success: true, campaign: currentCampaign });
 });
@@ -127,8 +226,94 @@ apiRouter.get('/campaign', (_req: Request, res: Response) => {
 apiRouter.put('/campaign', (req: Request, res: Response) => {
   if (req.body) {
     currentCampaign = { ...currentCampaign, ...req.body };
+    const idx = allCampaigns.findIndex((c) => c.id === currentCampaign.id);
+    if (idx !== -1) {
+      allCampaigns[idx] = { ...allCampaigns[idx], ...req.body };
+    }
   }
   res.json({ success: true, campaign: currentCampaign });
+});
+
+// All Campaigns Directory endpoints (List & Launch)
+apiRouter.get('/campaigns', (_req: Request, res: Response) => {
+  res.json({
+    success: true,
+    campaigns: allCampaigns,
+    activeCampaignId: currentCampaign.id,
+  });
+});
+
+apiRouter.post('/campaigns', (req: Request, res: Response) => {
+  const newCamp = req.body;
+  if (!newCamp || !newCamp.name) {
+    res.status(400).json({ success: false, error: 'Campaign name is required' });
+    return;
+  }
+
+  const campToSave = {
+    id: newCamp.id || `CAMP-${Date.now().toString().slice(-4)}`,
+    format: 'in-person',
+    dates: 'TBD',
+    location: 'San Francisco, CA',
+    organizerName: 'TechNova Global',
+    hashtags: ['#TechSummit'],
+    stats: {
+      postsCreated: 0,
+      postsGrowth: '+0%',
+      reachCount: '0',
+      reachNumeric: 0,
+      vipCount: '0 / 20',
+      viralRate: '0.0%',
+    },
+    ...newCamp,
+  };
+
+  // Add to top of list
+  allCampaigns = [campToSave, ...allCampaigns.filter((c) => c.id !== campToSave.id)];
+
+  // Automatically activate/launch if launchNow !== false
+  if (newCamp.launchNow !== false) {
+    currentCampaign = campToSave;
+  }
+
+  res.json({
+    success: true,
+    campaign: campToSave,
+    campaigns: allCampaigns,
+    activeCampaignId: currentCampaign.id,
+  });
+});
+
+// Launch / Switch active campaign
+apiRouter.post('/campaigns/:id/launch', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const target = allCampaigns.find((c) => c.id === id);
+  if (!target) {
+    res.status(404).json({ success: false, error: 'Campaign not found' });
+    return;
+  }
+
+  currentCampaign = target;
+  res.json({
+    success: true,
+    activeCampaign: currentCampaign,
+    activeCampaignId: currentCampaign.id,
+    message: `Campaign "${target.name}" launched and live!`,
+  });
+});
+
+// Delete or archive campaign
+apiRouter.delete('/campaigns/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  if (allCampaigns.length <= 1) {
+    res.status(400).json({ success: false, error: 'Cannot delete the only campaign' });
+    return;
+  }
+  allCampaigns = allCampaigns.filter((c) => c.id !== id);
+  if (currentCampaign.id === id) {
+    currentCampaign = allCampaigns[0];
+  }
+  res.json({ success: true, campaigns: allCampaigns, activeCampaignId: currentCampaign.id });
 });
 
 // Live feed posts

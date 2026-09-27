@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { TabType, CampaignConfig, AttendeeProfile, SharedPost, ToneType } from './types';
-import { DEFAULT_CAMPAIGN, DEFAULT_PROFILE, INITIAL_POSTS } from './constants';
+import { DEFAULT_CAMPAIGN, INITIAL_CAMPAIGNS, DEFAULT_PROFILE, INITIAL_POSTS } from './constants';
 import { Header } from './components/Header';
 import { OrganizerView } from './components/OrganizerView';
 import { AttendeeView } from './components/AttendeeView';
 import { CampaignAnalytics } from './components/CampaignAnalytics';
 import { DocsModal } from './components/DocsModal';
 import { CampaignModal } from './components/CampaignModal';
+import { CampaignsListModal } from './components/CampaignsListModal';
 import { ProfileModal } from './components/ProfileModal';
 import { NotificationsDrawer } from './components/NotificationsDrawer';
 import { Footer } from './components/Footer';
@@ -14,6 +15,7 @@ import { Footer } from './components/Footer';
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('organizer');
   const [campaign, setCampaign] = useState<CampaignConfig>(DEFAULT_CAMPAIGN);
+  const [campaigns, setCampaigns] = useState<CampaignConfig[]>(INITIAL_CAMPAIGNS);
   const [profile, setProfile] = useState<AttendeeProfile>(DEFAULT_PROFILE);
   const [sharedPosts, setSharedPosts] = useState<SharedPost[]>(INITIAL_POSTS);
 
@@ -22,19 +24,32 @@ export default function App() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isCreateCampaignOpen, setIsCreateCampaignOpen] = useState(false);
+  const [isCampaignsListOpen, setIsCampaignsListOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(2);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Sync campaign and posts from backend
+  // Sync campaigns list and posts from backend
   useEffect(() => {
-    fetch('/api/campaign')
+    fetch('/api/campaigns')
       .then((res) => res.json())
       .then((data) => {
-        if (data.success && data.campaign) {
-          setCampaign((prev) => ({ ...prev, ...data.campaign }));
+        if (data.success && data.campaigns && data.campaigns.length > 0) {
+          setCampaigns(data.campaigns);
+          const active = data.campaigns.find((c: any) => c.id === data.activeCampaignId) || data.campaigns[0];
+          if (active) setCampaign(active);
         }
       })
-      .catch((err) => console.log('Offline mode or server initializing:', err));
+      .catch(() => {
+        // Fallback to /api/campaign
+        fetch('/api/campaign')
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success && data.campaign) {
+              setCampaign((prev) => ({ ...prev, ...data.campaign }));
+            }
+          })
+          .catch((err) => console.log('Offline mode or server initializing:', err));
+      });
 
     fetch('/api/posts')
       .then((res) => res.json())
@@ -53,10 +68,28 @@ export default function App() {
     }, 3200);
   };
 
-  // Update campaign
+  // Switch / Launch active campaign
+  const handleLaunchCampaign = async (targetCamp: CampaignConfig) => {
+    setCampaign(targetCamp);
+    showToast(`Campaign "${targetCamp.name}" is now live!`);
+    setActiveTab('organizer');
+
+    try {
+      await fetch(`/api/campaigns/${targetCamp.id}/launch`, {
+        method: 'POST',
+      });
+    } catch (err) {
+      console.warn('Local campaign switch applied', err);
+    }
+  };
+
+  // Update active campaign configuration
   const handleUpdateCampaign = async (updated: Partial<CampaignConfig>) => {
     const newConfig = { ...campaign, ...updated };
     setCampaign(newConfig);
+    setCampaigns((prev) =>
+      prev.map((c) => (c.id === newConfig.id ? newConfig : c))
+    );
     showToast('Campaign settings updated & live on attendee portal!');
     try {
       await fetch('/api/campaign', {
@@ -69,16 +102,18 @@ export default function App() {
     }
   };
 
-  // Create new campaign
+  // Create new campaign and launch it immediately
   const handleCreateCampaign = async (newCamp: CampaignConfig) => {
     setCampaign(newCamp);
-    showToast(`New campaign "${newCamp.name}" launched!`);
+    setCampaigns((prev) => [newCamp, ...prev.filter((c) => c.id !== newCamp.id)]);
+    showToast(`New campaign "${newCamp.name}" launched and live!`);
     setActiveTab('organizer');
+
     try {
-      await fetch('/api/campaign', {
-        method: 'PUT',
+      await fetch('/api/campaigns', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newCamp),
+        body: JSON.stringify({ ...newCamp, launchNow: true }),
       });
     } catch (err) {
       console.warn('Backend sync for new campaign failed', err);
@@ -109,6 +144,11 @@ export default function App() {
         setSharedPosts((prev) => [data.post, ...prev]);
         if (data.updatedStats) {
           setCampaign((prev) => ({ ...prev, stats: data.updatedStats }));
+          setCampaigns((prev) =>
+            prev.map((c) =>
+              c.id === campaign.id ? { ...c, stats: data.updatedStats } : c
+            )
+          );
         }
       }
     } catch {
@@ -157,7 +197,9 @@ export default function App() {
           setUnreadNotifications(0);
         }}
         onOpenProfile={() => setIsProfileOpen(true)}
-        onOpenCampaignSwitcher={() => setIsCreateCampaignOpen(true)}
+        onOpenCampaignsList={() => setIsCampaignsListOpen(true)}
+        onOpenLaunchCampaign={() => setIsCreateCampaignOpen(true)}
+        campaignsCount={campaigns.length}
         unreadNotificationsCount={unreadNotifications}
       />
 
@@ -169,6 +211,7 @@ export default function App() {
             onUpdateCampaign={handleUpdateCampaign}
             sharedPosts={sharedPosts}
             onCreateCampaignClick={() => setIsCreateCampaignOpen(true)}
+            onOpenCampaignsList={() => setIsCampaignsListOpen(true)}
             onExportCsv={handleExportCsv}
             onSwitchToAttendeeView={() => setActiveTab('attendee')}
           />
@@ -197,6 +240,21 @@ export default function App() {
       {/* Modals and Drawers */}
       <DocsModal isOpen={isDocsOpen} onClose={() => setIsDocsOpen(false)} />
 
+      {/* Directory of All Campaigns */}
+      <CampaignsListModal
+        isOpen={isCampaignsListOpen}
+        onClose={() => setIsCampaignsListOpen(false)}
+        campaigns={campaigns}
+        activeCampaignId={campaign.id}
+        onSelectCampaign={handleLaunchCampaign}
+        onOpenCreateCampaign={() => setIsCreateCampaignOpen(true)}
+        onOpenAttendeePortal={(camp) => {
+          handleLaunchCampaign(camp);
+          setActiveTab('attendee');
+        }}
+      />
+
+      {/* Create & Launch Campaign Modal */}
       <CampaignModal
         isOpen={isCreateCampaignOpen}
         onClose={() => setIsCreateCampaignOpen(false)}

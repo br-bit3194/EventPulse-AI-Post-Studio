@@ -6,6 +6,7 @@ interface OrganizerViewProps {
   onUpdateCampaign: (updated: Partial<CampaignConfig>) => void;
   sharedPosts: SharedPost[];
   onCreateCampaignClick: () => void;
+  onOpenCampaignsList?: () => void;
   onExportCsv: () => void;
   onSwitchToAttendeeView: () => void;
 }
@@ -15,6 +16,7 @@ export const OrganizerView: React.FC<OrganizerViewProps> = ({
   onUpdateCampaign,
   sharedPosts,
   onCreateCampaignClick,
+  onOpenCampaignsList,
   onExportCsv,
   onSwitchToAttendeeView,
 }) => {
@@ -143,21 +145,32 @@ export const OrganizerView: React.FC<OrganizerViewProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+            {onOpenCampaignsList && (
+              <button
+                onClick={onOpenCampaignsList}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#f0eded] hover:bg-[#eae7e7] text-[#1c1b1b] text-xs font-semibold transition-all shadow-xs"
+                type="button"
+                title="List all event campaigns in directory"
+              >
+                <span className="material-symbols-outlined text-[18px] text-[#004e98]">format_list_bulleted</span>
+                <span>List All Campaigns</span>
+              </button>
+            )}
             <button
               onClick={onExportCsv}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#f0eded] hover:bg-[#eae7e7] text-[#1c1b1b] text-xs font-semibold transition-all shadow-xs"
               type="button"
             >
               <span className="material-symbols-outlined text-[18px] text-[#414752]">download</span>
-              <span>Export Analytics CSV</span>
+              <span>Export CSV</span>
             </button>
             <button
               onClick={onCreateCampaignClick}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#0466c2] hover:bg-[#004e98] text-white text-xs font-semibold shadow-sm transition-all active:scale-[0.98]"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#004e98] hover:bg-[#004e98]/90 text-white text-xs font-semibold shadow-sm transition-all active:scale-[0.98]"
               type="button"
             >
-              <span className="material-symbols-outlined text-[18px]">add_circle</span>
-              <span>Create New Campaign</span>
+              <span className="material-symbols-outlined text-[18px]">rocket_launch</span>
+              <span>Launch New Campaign</span>
             </button>
           </div>
         </div>

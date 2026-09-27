@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { TabType, CampaignConfig, AttendeeProfile } from '../types';
 import { ASSETS } from '../constants';
 
@@ -10,7 +10,9 @@ interface HeaderProps {
   onOpenDocs: () => void;
   onOpenNotifications: () => void;
   onOpenProfile: () => void;
-  onOpenCampaignSwitcher: () => void;
+  onOpenCampaignsList: () => void;
+  onOpenLaunchCampaign: () => void;
+  campaignsCount?: number;
   unreadNotificationsCount?: number;
 }
 
@@ -22,34 +24,53 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenDocs,
   onOpenNotifications,
   onOpenProfile,
-  onOpenCampaignSwitcher,
+  onOpenCampaignsList,
+  onOpenLaunchCampaign,
+  campaignsCount = 4,
   unreadNotificationsCount = 2,
 }) => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-      <div className="h-16 max-w-[1440px] mx-auto px-4 sm:px-6 flex items-center justify-between gap-4">
+      <div className="h-16 max-w-[1440px] mx-auto px-3 sm:px-6 flex items-center justify-between gap-3">
         {/* Brand Logo & Name */}
-        <div 
-          className="flex items-center gap-2 flex-shrink-0 cursor-pointer"
-          onClick={() => setActiveTab('organizer')}
-        >
-          <img
-            alt="EventPulse Logo"
-            className="h-8 w-auto object-contain"
-            src={ASSETS.logo}
-          />
-          <div className="flex flex-col">
-            <span className="font-title text-base font-bold text-[#1c1b1b] leading-tight tracking-tight">
-              EventPulse
-            </span>
-            <span className="text-[10px] text-[#004e98] tracking-wider uppercase font-bold">
-              AI Post Studio
-            </span>
+        <div className="flex items-center gap-2.5 flex-shrink-0">
+          <div 
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => setActiveTab('organizer')}
+          >
+            <img
+              alt="EventPulse Logo"
+              className="h-8 w-auto object-contain"
+              src={ASSETS.logo}
+            />
+            <div className="flex flex-col">
+              <span className="font-title text-base font-bold text-[#1c1b1b] leading-tight tracking-tight">
+                EventPulse
+              </span>
+              <span className="text-[10px] text-[#004e98] tracking-wider uppercase font-bold">
+                AI Post Studio
+              </span>
+            </div>
           </div>
+
+          {/* Quick Active Campaign Pill */}
+          <button
+            type="button"
+            onClick={onOpenCampaignsList}
+            className="hidden md:flex items-center gap-1.5 bg-[#f6f3f2] hover:bg-[#eae7e7] px-2.5 py-1 rounded-full transition-colors text-left border border-gray-200"
+            title="Click to list and switch event campaigns"
+          >
+            <span className="w-2 h-2 rounded-full bg-[#006c49] animate-pulse"></span>
+            <span className="text-[11px] text-[#414752] font-medium">Live:</span>
+            <span className="text-[11px] text-[#1c1b1b] font-bold max-w-[110px] truncate">
+              {campaign.name.split(' ')[0]}
+            </span>
+            <span className="material-symbols-outlined text-[15px] text-gray-400">expand_more</span>
+          </button>
         </div>
 
         {/* Center Pill Navigation */}
-        <div className="flex items-center justify-center flex-1 max-w-md">
+        <div className="hidden lg:flex items-center justify-center flex-1 max-w-md">
           <nav className="inline-flex items-center p-1 bg-[#f0eded] rounded-full shadow-inner">
             <button
               onClick={() => setActiveTab('organizer')}
@@ -84,29 +105,40 @@ export const Header: React.FC<HeaderProps> = ({
           </nav>
         </div>
 
-        {/* Right Section Actions & User Profile */}
-        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-          {/* Active Event Indicator / Switcher */}
+        {/* Right Section: List Campaigns + Launch Campaign Actions */}
+        <div className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
+          {/* List All Campaigns Button */}
           <button
-            onClick={onOpenCampaignSwitcher}
-            className="hidden xl:flex items-center gap-1.5 bg-[#f6f3f2] hover:bg-[#eae7e7] px-3 py-1 rounded-full transition-colors text-left"
-            title="Switch or manage active event"
+            type="button"
+            onClick={onOpenCampaignsList}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#f0eded] hover:bg-[#e4e1e1] text-[#1c1b1b] text-xs font-semibold transition-all shadow-2xs"
+            title="List all event campaigns in directory"
           >
-            <span className="w-2 h-2 rounded-full bg-[#006c49] animate-pulse"></span>
-            <span className="text-[11px] text-[#414752]">Active Event:</span>
-            <span className="text-[11px] text-[#1c1b1b] font-semibold max-w-[120px] truncate">
-              {campaign.name.split(' ')[0]} 2025
+            <span className="material-symbols-outlined text-[17px] text-[#004e98]">format_list_bulleted</span>
+            <span className="hidden sm:inline">Campaigns</span>
+            <span className="px-1.5 py-0.2 rounded-full bg-white text-[#004e98] text-[10px] font-bold">
+              {campaignsCount}
             </span>
-            <span className="material-symbols-outlined text-[16px] text-gray-500">expand_more</span>
+          </button>
+
+          {/* Launch Campaign Button */}
+          <button
+            type="button"
+            onClick={onOpenLaunchCampaign}
+            className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-[#004e98] hover:bg-[#004e98]/90 text-white text-xs font-bold shadow-xs transition-all active:scale-[0.98]"
+            title="Create and launch a new live campaign"
+          >
+            <span className="material-symbols-outlined text-[17px]">rocket_launch</span>
+            <span>Launch Campaign</span>
           </button>
 
           {/* Docs / Help Guide */}
           <button
             onClick={onOpenDocs}
-            className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[#414752] hover:text-[#1c1b1b] hover:bg-[#f0eded] text-xs font-semibold transition-colors"
+            className="hidden xl:inline-flex items-center gap-1 p-2 rounded-lg text-[#414752] hover:text-[#1c1b1b] hover:bg-[#f0eded] transition-colors"
+            title="Documentation"
           >
-            <span className="material-symbols-outlined text-[18px]">help_outline</span>
-            <span>Docs</span>
+            <span className="material-symbols-outlined text-[20px]">help_outline</span>
           </button>
 
           {/* Notifications Bell */}
@@ -118,13 +150,13 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <span className="material-symbols-outlined text-[20px]">notifications</span>
             {unreadNotificationsCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#004e98]"></span>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#ba1a1a]"></span>
             )}
           </button>
 
           {/* Profile Avatar & Menu */}
           <div 
-            className="relative flex items-center pl-1 cursor-pointer"
+            className="relative flex items-center pl-0.5 cursor-pointer"
             onClick={onOpenProfile}
             title={`Logged in as ${profile.name}`}
           >
@@ -138,6 +170,34 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Mobile Sub-Navigation Bar */}
+      <div className="lg:hidden flex items-center justify-around border-t border-gray-100 py-1.5 px-2 bg-[#fcf9f8]">
+        <button
+          onClick={() => setActiveTab('organizer')}
+          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+            activeTab === 'organizer' ? 'bg-[#004e98] text-white' : 'text-[#414752]'
+          }`}
+        >
+          Organizer
+        </button>
+        <button
+          onClick={() => setActiveTab('attendee')}
+          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+            activeTab === 'attendee' ? 'bg-[#004e98] text-white' : 'text-[#414752]'
+          }`}
+        >
+          Attendee View
+        </button>
+        <button
+          onClick={() => setActiveTab('analytics')}
+          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+            activeTab === 'analytics' ? 'bg-[#004e98] text-white' : 'text-[#414752]'
+          }`}
+        >
+          Campaign Analytics
+        </button>
       </div>
     </header>
   );
